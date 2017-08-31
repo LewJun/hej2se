@@ -1,0 +1,232 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.lewjun</groupId>
+    <artifactId>hej2se</artifactId>
+    <packaging>jar</packaging>
+    <version>1.0</version>
+    <name>hej2se</name>
+    <url>http://maven.apache.org</url>
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.12</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- slf4j start -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.12</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>1.7.12</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>log4j</groupId>
+                    <artifactId>log4j</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <!-- slf4j end -->
+
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>1.2.17</version>
+        </dependency>
+
+    </dependencies>
+
+    <profiles>
+        <profile>
+            <id>dev</id>
+            <properties>
+                <env>dev</env>
+            </properties>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+        </profile>
+        <profile>
+            <id>test</id>
+            <properties>
+                <env>test</env>
+            </properties>
+        </profile>
+        <profile>
+            <id>prod</id>
+            <properties>
+                <env>prod</env>
+            </properties>
+        </profile>
+    </profiles>
+
+    <build>
+        <finalName>hej2se</finalName>
+        <filters>
+            <filter>src/main/resources/profiles/${env}.properties</filter>
+        </filters>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+            <resource>
+                <directory>src/main/java</directory>
+                <includes>
+                    <include>**/*.xml</include>
+                    <include>**/*.properties</include>
+                </includes>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <version>2.4</version>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>2.4</version>
+                <!--
+                如果希望com.lewjun.App是作为一个主程序启动，那么需要如下配置
+                <configuration>
+                    <excludes>
+                        <exclude>*.properties</exclude>
+                    </excludes>
+                    <archive>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                            <classpathPrefix>lib/</classpathPrefix>
+                            <mainClass>
+                                com.lewjun.App
+                            </mainClass>
+                        </manifest>
+                        <manifestEntries>
+                            <Class-Path>conf/</Class-Path>
+                        </manifestEntries>
+                    </archive>
+                </configuration>-->
+            </plugin>
+
+            <!--
+            如果要生成assembly，如下配置 make-assembly package-zip
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <descriptor>src/main/assembly/assembly.xml</descriptor>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>package-zip</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            -->
+
+            <!--如果项目中用到spring Framework，用上面方式打出来的包运行时会出错，使用下面的方法
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>2.4.1</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>com.lewjun.App</mainClass>
+                                </transformer>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                    <resource>META-INF/spring.handlers</resource>
+                                </transformer>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                    <resource>META-INF/spring.schemas</resource>
+                                </transformer>
+                            </transformers>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            -->
+
+            <!-- findbugs插件-->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>findbugs-maven-plugin</artifactId>
+                <version>2.5</version>
+                <configuration>
+                    <effort>Max</effort>
+                    <threshold>Low</threshold>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>findbugs</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.ant</groupId>
+                        <artifactId>ant-launcher</artifactId>
+                        <version>1.8.2</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+            <!-- 编译插件 -->
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.3.2</version>
+                <configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                    <encoding>UTF-8</encoding>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.codehaus.plexus</groupId>
+                        <artifactId>plexus-compiler-javac</artifactId>
+                        <version>1.8.1</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+            <!-- 资源插件 -->
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>2.6</version>
+                <configuration>
+                    <encoding>UTF-8</encoding>
+                </configuration>
+            </plugin>
+            <!-- 单元测试插件 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.10</version>
+                <configuration>
+                    <skip>false</skip>
+                    <testFailureIgnore>true</testFailureIgnore>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
